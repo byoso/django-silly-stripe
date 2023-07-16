@@ -3,6 +3,7 @@ _project_fake/
 _users/
 /templates
 .venv/
+.env
 manage.py
 __pycache__/
 *.sqlite3

@@ -1,32 +1,45 @@
 
 
 import stripe
-from stripe.error import AuthenticationError
+from stripe.error import AuthenticationError, InvalidRequestError
 from django.conf import settings
 
-from .helpers import color as c
-from .models import StripeConfig
+from .helpers import DSS_CONFIG_ERROR
+# from .models import StripeConfig, SillyStripeConfig
 
 
 SILLY_STRIPE = {
-    'is_configured': False,
-    'STRIPE_PUBLIC_KEY': None,
-    'STRIPE_SECRET_KEY': None,
-    'STRIPE_WEBHOOK_SECRET': None,
 }
 
 for key in settings.SILLY_STRIPE:
     SILLY_STRIPE[key] = settings.SILLY_STRIPE[key]
 
+# if not SillyStripeConfig.objects.all().exists():
+#     silly_stripe_config = SillyStripeConfig.objects.create()
+# else:
+#     silly_stripe_config = SillyStripeConfig.objects.first()
 
-if SILLY_STRIPE['config_name'] is not None and \
-        StripeConfig.objects.filter(name=SILLY_STRIPE['config_name']).exists():
-    stripe_config = StripeConfig.objects.get(name=SILLY_STRIPE['config_name'])
-    stripe.api_key = stripe_config.secret_key
-    SILLY_STRIPE['is_configured'] = True
 
-    print('=== Customers: ', stripe.Customer.list())
-    print('=== Products: ', stripe.Product.list())
+def check_stripe_configuration(config_name):
+    # if config_name is None or \
+    #         not StripeConfig.objects.filter(name=config_name).exists():
+    #     print(DSS_CONFIG_ERROR)
+    #     return
 
-else:
-    print(f"{c['warning']}DJANGO-SILLY-STRIPE IS NOT CONFIGURED{c['end']}")
+    # stripe_config = StripeConfig.objects.get(name=config_name)
+    # try:
+    #     stripe.api_key = stripe_config.secret_key
+    #     stripe.Customer.list()
+    # except AuthenticationError:
+    #     print(DSS_CONFIG_ERROR)
+        return
+
+    # Do stuff here
+
+    # print('=== Customers: ', stripe.Customer.list())
+    # print('=== Products: ', stripe.Product.list())
+    # print('=== Prices: ', stripe.Price.list())
+
+
+# if silly_stripe_config.run_config:
+#     check_stripe_configuration(silly_stripe_config.config_name)

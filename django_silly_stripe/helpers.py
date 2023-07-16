@@ -8,3 +8,10 @@ color = {
     "warning": "\x1b[0;30;33m",
     "danger": "\x1b[0;30;31m",
 }
+
+DSS_CONFIG_ERROR = (
+    f"{color['warning']}DJANGO-SILLY-STRIPE IS NOT CONFIGURED PROPERLY."
+    "\nCheck the configuration in the admin panel."
+    f"{color['end']}"
+
+    )

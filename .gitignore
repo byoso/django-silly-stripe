@@ -1,6 +1,7 @@
 # environment
 _project_fake/
 _users/
+subscriptions/
 /templates
 .venv/
 .env

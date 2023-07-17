@@ -1,6 +1,6 @@
+from .models import Customer
 
 # color parameters: style;background (30 is none);foreground
-
 color = {
     "end": "\x1b[0m",
     "info": "\x1b[0;30;36m",
@@ -15,3 +15,13 @@ DSS_CONFIG_ERROR = (
     f"{color['end']}"
 
     )
+
+
+def user_creates_new_customer(user, data):
+    new_customer = Customer(
+        stripe_id=data["id"],
+        user=user,
+    )
+    new_customer.save()
+    user.save()
+    return user

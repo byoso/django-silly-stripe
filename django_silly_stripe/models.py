@@ -13,10 +13,11 @@ class Customer(models.Model):
         editable=False,
     )
     stripe_id = models.CharField(max_length=100, unique=True)
-    user = models.ForeignKey(
+    user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
-        related_name='stripe_customer',
+        related_name='customer',
+        default=None,
     )
 
     class Meta:

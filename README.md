@@ -1,21 +1,25 @@
-# Django Silly Stipe
+# Django Silly Stripe
 
 **WIP: not ready to use**
 
 It is a wrapper based on the use of python's stripe API. The aim is
 to make it as simple as possible to use.
 
-For now, only stripe checkout is supported.
+For now, only stripe checkout is supported, with less then 100 products
+and 100 prices. Good to make subscriptions easily, but nothing too fancy.
 
 ## Installation
 
 `pip install django-silly-stripe`
 
+`./manage.py migrate`
+
 **settings.py**
 ```python
 INSTALLED_APPS = [
+    'django_silly_stripe',  # <-- BEFORE admin>
+
     # ...
-    'django_silly_stripe',
 ]
 
 
@@ -38,6 +42,12 @@ urlpatterns = [
     path('', include('django_silly_stripe.urls')),
 ]
 ```
+
+### Once you have created your products (and prices) witin stripe online:
+Go in the admin interface, and press the big green button
+"Stripe: get prices & products" to populate the database with them.
+
+
 
 ## Classic Django usage
 

@@ -1,3 +1,4 @@
+
 from .models import Customer
 
 # color parameters: style;background (30 is none);foreground
@@ -19,7 +20,7 @@ DSS_CONFIG_ERROR = (
 
 def user_creates_new_customer(user, data):
     new_customer = Customer(
-        stripe_id=data["id"],
+        id=data["id"],
         user=user,
     )
     new_customer.save()

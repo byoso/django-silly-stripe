@@ -1,4 +1,6 @@
 import uuid
+import datetime
+import time
 
 import stripe
 
@@ -115,3 +117,30 @@ class Price(models.Model):
 
     def __str__(self):
         return f"<Price: {self.product.name}>"
+
+
+class Subscription(models.Model):
+    id = models.CharField(
+        max_length=100, unique=True,
+        primary_key=True
+        )
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='subscriptions')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='subscriptions')
+    status = models.CharField(max_length=64)
+    start_time = models.CharField(max_length=32)  # timestamp
+    end_time = models.CharField(max_length=32)  # timestamp
+    cancel_at_period_end = models.BooleanField(default=False)
+
+    def __str__(self):
+        return (
+            f"<Subscription: {self.customer.user.email} : "
+            f"{self.product.name} - {self.status}  >"
+            )
+
+    def is_valid(self):
+        return self.status == 'active' or self.status == 'trialing'
+
+    def date_is_valid(self):
+        now = int(time.time())
+        ending = int(self.end_time)
+        return now < ending

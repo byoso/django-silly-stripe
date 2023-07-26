@@ -1,7 +1,7 @@
 from typing import Optional
 from django.contrib import admin
 from django.http.request import HttpRequest
-from .models import Customer, Product, Price
+from .models import Customer, Product, Price, Subscription
 
 
 class CustomerAdmin(admin.ModelAdmin):
@@ -48,6 +48,21 @@ class PriceAdmin(admin.ModelAdmin):
         return False
 
 
+class SubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('product', 'customer', 'id', 'status')
+    list_filter = ('status',)
+    search_fields = ('id', 'customer', 'product')
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=Subscription):
+        if obj.status == 'active' or obj.status == 'trialing':
+            return False
+        return True
+
+
 admin.site.register(Customer, CustomerAdmin)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(Price, PriceAdmin)
+admin.site.register(Subscription, SubscriptionAdmin)

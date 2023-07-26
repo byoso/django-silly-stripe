@@ -1,5 +1,6 @@
 
-from .models import Customer
+from .models import Customer, Subscription
+from django.db.models import Q
 
 # color parameters: style;background (30 is none);foreground
 color = {
@@ -26,3 +27,10 @@ def user_creates_new_customer(user, data):
     new_customer.save()
     user.save()
     return user
+
+
+def get_user_subscriptions(user):
+    subscriptions = user.customer.subscriptions.filter(
+        Q(status="active") | Q(status="trialing")
+    )
+    return subscriptions

@@ -1,14 +1,10 @@
 import json
-from pprint import pprint
 
 import stripe
 
 from django.shortcuts import redirect
 from django.http import (
     JsonResponse,
-    HttpResponseBadRequest,
-    HttpResponse,
-    HttpResponseForbidden
     )
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
@@ -16,47 +12,120 @@ from django.contrib.auth.decorators import permission_required
 
 from django_silly_stripe.conf import SILLY_STRIPE as dss_conf
 from django_silly_stripe.helpers import user_creates_new_customer
-from django_silly_stripe.models import Product, Price
-from django_silly_stripe.helpers import color as c
+from django_silly_stripe.models import (
+    Product,
+    Price,
+    Customer,
+    Subscription,
+    )
+
+
+def subscription_cancel(request):
+    print("===subscription_cancel")
+    if not request.user.is_authenticated or not request.user.is_active:
+        return JsonResponse({"message": "Permission denied"}, status=403)
+    if request.method == 'PUT':
+        data = json.loads(request.body)
+        # print("===data: ", data)
+        sub_id = data["subId"]
+        if not Subscription.objects.filter(id=sub_id).exists():
+            return JsonResponse(
+                {"message": "Subscription not found"},
+                status=404,
+                )
+        if not Subscription.objects.get(id=sub_id).customer.user == request.user:
+            return JsonResponse(
+                {"message": "Permission denied"},
+                status=403,
+                )
+        stripe.api_key = dss_conf["DSS_SECRET_KEY"]
+        try:
+            if dss_conf['SUBSCRIPTION_CANCEL'] == 'PERIOD':
+                stripe.Subscription.modify(
+                    sub_id,
+                    cancel_at_period_end=True,
+                    )
+            elif dss_conf['SUBSCRIPTION_CANCEL'] == 'NOW':
+                stripe.Subscription.delete(sub_id)
+            else:
+                return JsonResponse(
+                    {"message": "Subscription cancelation mode not configured"},
+                    status=500,
+                    )
+
+        except Exception as e:
+            # print(e)
+            return JsonResponse(
+                {"message": "An error occured, please try again later."},
+                status=500,
+                )
+
+        return JsonResponse(
+            {"message": "Subscription canceled successfully."},
+            status=200,
+            )
+
 
 @csrf_exempt
 def webhook(request):
     if request.method != 'POST':
-        return HttpResponseBadRequest({"message": "Method not allowed"})
+        return JsonResponse({"message": "Method not allowed"}, status=405)
     stripe_payload = request.body
     print("===WEBHOOK: stripe_payload: ")
-    pprint(stripe_payload)
+    # print(stripe_payload)
 
     try:
         event = stripe.Event.construct_from(
         json.loads(stripe_payload), stripe.api_key
         )
-    except ValueError as e:
+        print("=== event type: ", event.type)
+    except ValueError:
         # Invalid payload
-        return HttpResponse(status=400)
+        return JsonResponse({"message": "Invalid payload"}, status=400)
 
     # Handle the event
-    if event.type == 'payment_intent.succeeded':
-        payment_intent = event.data.object # contains a stripe.PaymentIntent
-        # Then define and call a method to handle the successful payment intent.
-        # handle_payment_intent_succeeded(payment_intent)
-    elif event.type == 'payment_method.attached':
-        payment_method = event.data.object # contains a stripe.PaymentMethod
-        # Then define and call a method to handle the successful attachment of a PaymentMethod.
-        # handle_payment_method_attached(payment_method)
-    # ... handle other event types
-    else:
-        print('Unhandled event type {}'.format(event.type))
+    match event.type:
+        case "customer.subscription.updated":
+            sub_id = event.data.object.id
+            print(event)
+            if not Subscription.objects.filter(id=sub_id).exists():
+                sub = Subscription(
+                    id=sub_id,
+                    customer=Customer.objects.get(id=event.data.object.customer),
+                    product=Product.objects.get(id=event.data.object.plan.product),
+                    status=event.data.object.status,
+                    start_time=event.data.object.current_period_start,
+                    end_time=event.data.object.current_period_end,
+                    cancel_at_period_end=event.data.object.cancel_at_period_end,
+                )
+                sub.save()
+            else:
+                sub = Subscription.objects.get(id=sub_id)
+                sub.status = event.data.object.status
+                sub.start_time = event.data.object.current_period_start
+                sub.end_time = event.data.object.current_period_end
+                sub.cancel_at_period_end = event.data.object.cancel_at_period_end
+                sub.save()
 
-    return HttpResponse(status=200)
+        case "customer.subscription.deleted":
+            sub_id = event.data.object.id
+            if Subscription.objects.filter(id=sub_id).exists():
+                sub = Subscription.objects.get(id=sub_id)
+                sub.delete()
+
+        case _:
+            print('Unhandled event type {}'.format(event.type))
+            pass
+
+    return JsonResponse({"message": "event handeled"}, status=200)
 
 
 def checkout(request):
     if not request.user.is_authenticated or not request.user.is_active:
-        return HttpResponseForbidden({"message": "Permission denied"})
+        return JsonResponse({"message": "Permission denied"}, status=403)
     if request.method == 'POST':
         data = json.loads(request.body)
-        print("===data: ", data)
+        # print("===data: ", data)
         price_id = data["priceId"]
 
         stripe.api_key = dss_conf["DSS_SECRET_KEY"]
@@ -69,14 +138,27 @@ def checkout(request):
                     'user_id': request.user.id,
                 }
             )
-            print("===new_customer_data: ", new_customer_data)
+            # print("===new_customer_data: ", new_customer_data)
             user_creates_new_customer(
                 user,
                 new_customer_data,
             )
 
+        else:
+            if dss_conf['SUBSCRIBE_ONLY_ONCE']:
+                product = Price.objects.get(id=price_id).product
+                if Subscription.objects.filter(
+                        customer=user.customer,
+                        product=product,
+                        status='active',
+                        ).exists():
+                    return JsonResponse(
+                        {"message": "You already have an active subscription"},
+                        status=403,
+                        )
+
         try:
-            print("===request.META['HTTP_HOST']: ", request.META['HTTP_HOST'])
+            # print("===request.META['HTTP_HOST']: ", request.META['HTTP_HOST'])
             session = stripe.checkout.Session.create(
                 customer=user.customer.id,
                 success_url=dss_conf['SUCCESS_URL'],
@@ -88,20 +170,27 @@ def checkout(request):
                     'quantity': 1
                 }],
             )
-            print('session id: ', session.id)
-            print('session : ', session)
+            # print('session id: ', session.id)
+            # print('session : ', session)
         except Exception as e:
-            print(e)
-            return HttpResponseBadRequest({"message": "Backend error in a stripe session creation"})
+            # print(e)
+            return JsonResponse(
+                {"message": "Backend error in a stripe session creation"},
+                status=500,
+                )
 
-        return JsonResponse({
-            "message": "Subscription parameters sent to build the checkout page",
-            "url": session.url,
-            })
+        return JsonResponse(
+            {
+                "message": "Subscription parameters sent to build the checkout page",
+                "url": session.url,
+            },
+            status=200,
+            )
 
 
-@permission_required('is_superuser')
+@permission_required('is_staff')
 def initialize_dss_from_stripe(request):
+    """Initializer in the admin interface"""
     Product.objects.all().delete()
     Price.objects.all().delete()
     stripe.api_key = dss_conf["DSS_SECRET_KEY"]

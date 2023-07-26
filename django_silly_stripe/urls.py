@@ -21,6 +21,11 @@ if dss_conf['USE_CHECKOUT']:
     urlpatterns += [
         path(dss_conf['DSS_PREFIX']+'checkout/', views.checkout, name='dss_checkout'),
         path(dss_conf['DSS_PREFIX']+'webhook/', views.webhook, name='dss_webhook'),
+        path(
+            dss_conf['DSS_PREFIX']+'subscription_cancel/',
+            views.subscription_cancel,
+            name='dss_subscription_cancel'
+            ),
     ]
 
 
@@ -30,6 +35,9 @@ User = get_user_model()
 
 
 def user_email_update_customer(sender, instance, **kwargs):
+    """Sends an update to stripe when a user's
+    email is changed.
+    """
     if Customer.objects.filter(user=instance).exists() and \
             (instance.email != instance.customer.email
              or instance.username != instance.customer.name):

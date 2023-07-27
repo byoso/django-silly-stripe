@@ -20,7 +20,10 @@ urlpatterns = [
 if dss_conf['USE_CHECKOUT']:
     urlpatterns += [
         path(dss_conf['DSS_PREFIX']+'checkout/', views.checkout, name='dss_checkout'),
-        path(dss_conf['DSS_PREFIX']+'webhook/', views.webhook, name='dss_webhook'),
+    ]
+
+if dss_conf['USE_SUBSCRIPTIONS_CANCEL']:
+    urlpatterns += [
         path(
             dss_conf['DSS_PREFIX']+'subscription_cancel/',
             views.subscription_cancel,
@@ -28,6 +31,15 @@ if dss_conf['USE_CHECKOUT']:
             ),
     ]
 
+if dss_conf['USE_WEBHOOK']:
+    urlpatterns += [
+        path(dss_conf['DSS_PREFIX']+'webhook/', views.webhook, name='dss_webhook'),
+    ]
+
+if dss_conf['USE_PORTAL']:
+    urlpatterns += [
+        path(dss_conf['DSS_PREFIX']+'portal/', views.portal, name='dss_portal'),
+    ]
 
 # Signal on user's email updated changes stripe customer's email
 

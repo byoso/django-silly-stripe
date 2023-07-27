@@ -20,8 +20,45 @@ from django_silly_stripe.models import (
     )
 
 
+def portal(request):
+    # print("===portal")
+    if not request.user.is_authenticated or not request.user.is_active:
+        return JsonResponse({"message": "Permission denied"}, status=403)
+    if request.method != 'GET':
+        return JsonResponse({"message": "Method not allowed"}, status=405)
+    stripe.api_key = dss_conf["DSS_SECRET_KEY"]
+    user = request.user
+    if not hasattr(user, 'customer'):
+            new_customer_data = stripe.Customer.create(
+                email=request.user.email,
+                name=request.user.username,
+                metadata={
+                    'user_id': request.user.id,
+                }
+            )
+            # print("===new_customer_data: ", new_customer_data)
+            user_creates_new_customer(
+                user,
+                new_customer_data,
+            )
+
+    stripe.billing_portal.Configuration.create(
+            business_profile={
+                "headline": "Cactus Practice partners with Stripe for simplified billing.",
+            },
+            features={"invoice_history": {"enabled": True}},
+        )
+
+    session = stripe.billing_portal.Session.create(
+        customer=user.customer.id,
+        return_url=dss_conf['PORTAL_BACK_URL'],
+    )
+    return JsonResponse({'url': session.url}, status=200)
+
+
+
 def subscription_cancel(request):
-    print("===subscription_cancel")
+    # print("===subscription_cancel")
     if not request.user.is_authenticated or not request.user.is_active:
         return JsonResponse({"message": "Permission denied"}, status=403)
     if request.method == 'PUT':
@@ -71,14 +108,14 @@ def webhook(request):
     if request.method != 'POST':
         return JsonResponse({"message": "Method not allowed"}, status=405)
     stripe_payload = request.body
-    print("===WEBHOOK: stripe_payload: ")
+    # print("===WEBHOOK: stripe_payload: ")
     # print(stripe_payload)
 
     try:
         event = stripe.Event.construct_from(
         json.loads(stripe_payload), stripe.api_key
         )
-        print("=== event type: ", event.type)
+        # print("=== event type: ", event.type)
     except ValueError:
         # Invalid payload
         return JsonResponse({"message": "Invalid payload"}, status=400)
@@ -87,7 +124,7 @@ def webhook(request):
     match event.type:
         case "customer.subscription.updated":
             sub_id = event.data.object.id
-            print(event)
+            # print(event)
             if not Subscription.objects.filter(id=sub_id).exists():
                 sub = Subscription(
                     id=sub_id,
@@ -114,7 +151,7 @@ def webhook(request):
                 sub.delete()
 
         case _:
-            print('Unhandled event type {}'.format(event.type))
+            # print('Unhandled event type {}'.format(event.type))
             pass
 
     return JsonResponse({"message": "event handeled"}, status=200)
@@ -187,6 +224,9 @@ def checkout(request):
             status=200,
             )
 
+
+# ======================================================================
+# Admin interface views
 
 @permission_required('is_staff')
 def initialize_dss_from_stripe(request):

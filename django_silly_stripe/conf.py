@@ -9,12 +9,25 @@ from .helpers import DSS_CONFIG_ERROR
 
 
 SILLY_STRIPE = {
-      'DSS_PREFIX': 'dss/',
-      'USE_CHECKOUT': True,
-      'SUCCESS_URL': None,
-      'CANCEL_URL': None,
-      'SUBSCRIPTION_CANCEL': 'PERIOD',  # 'PERIOD' or 'NOW' (beware: no refund)
-      'SUBSCRIBE_ONLY_ONCE': True,
+    # Basic settings
+    'DSS_SECRET_KEY': 'sk_xxxxxx',
+    'DSS_PUBLIC_KEY': 'pk_xxxxxx',
+    'DSS_RESTRICTED_KEY': 'rk_xxxxxx',  # optionnal
+    'DSS_WEBHOOK_SECRET': 'wk_xxxxxx',
+    'DSS_PREFIX': 'dss/',
+    # Django Silly Stripe Endpoints
+    'USE_CHECKOUT': True,
+    'USE_SUBSCRIPTIONS_CANCEL': True,
+    'USE_WEBHOOK': True,
+    'USE_PORTAL': True,
+    # Checkout settings
+    'SUCCESS_URL': 'https://example.com/checkout_success',
+    'CANCEL_URL': 'https://example.com/checkout_cancel',
+    # Subscriptions settings
+    'SUBSCRIPTION_CANCEL': 'PERIOD',  # 'PERIOD' or 'NOW' (beware with 'NOW': no refund)
+    'SUBSCRIBE_ONLY_ONCE': True,
+    # Portal settings
+    'PORTAL_BACK_URL': 'https://example.com/back_from_portal',
 }
 
 for key in settings.SILLY_STRIPE:

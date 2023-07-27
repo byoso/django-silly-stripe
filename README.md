@@ -1,7 +1,5 @@
 # Django Silly Stripe
 
-**WIP: not ready to use**
-
 It is a wrapper based on the use of python's stripe API. The aim is
 to make it as simple as possible to use.
 
@@ -29,6 +27,7 @@ SILLY_STRIPE = {
     'DSS_PUBLIC_KEY': 'pk_xxxxxx',
     'DSS_RESTRICTED_KEY': 'rk_xxxxxx',  # optionnal
     'DSS_WEBHOOK_SECRET': 'wk_xxxxxx',
+    # ... read the wiki to see more options
 }
 
 ```
@@ -57,25 +56,25 @@ In a classic template
 // Subscribe button
     let subscribe = document.getElementById('subscribe');
     document.addEventListener('DOMContentLoaded', () => {
-    subscribe.addEventListener('click', () => {
-        axios({
-        method: 'post',
-        url: '{% url "dss_checkout" %}',
-        data: {
-            // the price id should be given via the context of the view,
-            // not hard coded like here
-            'priceId': 'price_1NT4BqCyzfytDBEqarffvBjA',
-        },
-        headers: {
-            'X-CSRFToken': '{{ csrf_token }}',
-        }
-        }).then(response => {
-        console.log(response.data);
-        window.location.href = response.data.url;
-        }).catch(error => {
-        console.log(error);
-        })
-    });
+        subscribe.addEventListener('click', () => {
+            axios({
+            method: 'post',
+            url: '{% url "dss_checkout" %}',
+            data: {
+                // the price id should be given via the context of the view,
+                // not hard coded like here
+                'priceId': 'price_1NT4BqCyzfytDBEqarffvBjA',
+            },
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+            }
+            }).then(response => {
+            console.log(response.data);
+            window.location.href = response.data.url;
+            }).catch(error => {
+            console.log(error);
+            })
+        });
     });
 
 

@@ -29,18 +29,8 @@ def portal(request):
     stripe.api_key = dss_conf["DSS_SECRET_KEY"]
     user = request.user
     if not hasattr(user, 'customer'):
-            new_customer_data = stripe.Customer.create(
-                email=request.user.email,
-                name=request.user.username,
-                metadata={
-                    'user_id': request.user.id,
-                }
-            )
-            # print("===new_customer_data: ", new_customer_data)
-            user_creates_new_customer(
-                user,
-                new_customer_data,
-            )
+        # print("===new_customer_data: ", new_customer_data)
+        user_creates_new_customer(user)
 
     stripe.billing_portal.Configuration.create(
             business_profile={
@@ -168,18 +158,8 @@ def checkout(request):
         stripe.api_key = dss_conf["DSS_SECRET_KEY"]
         user = request.user
         if not hasattr(user, 'customer'):
-            new_customer_data = stripe.Customer.create(
-                email=request.user.email,
-                name=request.user.username,
-                metadata={
-                    'user_id': request.user.id,
-                }
-            )
             # print("===new_customer_data: ", new_customer_data)
-            user_creates_new_customer(
-                user,
-                new_customer_data,
-            )
+            user_creates_new_customer(user)
 
         else:
             if dss_conf['SUBSCRIBE_ONLY_ONCE']:

@@ -4,8 +4,23 @@ import stripe
 from stripe.error import AuthenticationError, InvalidRequestError
 from django.conf import settings
 
-from .helpers import DSS_CONFIG_ERROR
 # from .models import StripeConfig, SillyStripeConfig
+
+# color parameters: style;background (30 is none);foreground
+color = {
+    "end": "\x1b[0m",
+    "info": "\x1b[0;30;36m",
+    "success": "\x1b[0;30;32m",
+    "warning": "\x1b[0;30;33m",
+    "danger": "\x1b[0;30;31m",
+}
+
+DSS_CONFIG_ERROR = (
+    f"{color['warning']}DJANGO-SILLY-STRIPE IS NOT CONFIGURED PROPERLY."
+    "\nCheck the configuration in the admin panel."
+    f"{color['end']}"
+
+    )
 
 
 SILLY_STRIPE = {

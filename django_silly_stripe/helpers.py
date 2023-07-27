@@ -1,27 +1,28 @@
+import stripe
 
-from .models import Customer, Subscription
+from .models import Customer
 from django.db.models import Q
+from django.db.models import QuerySet
 
-# color parameters: style;background (30 is none);foreground
-color = {
-    "end": "\x1b[0m",
-    "info": "\x1b[0;30;36m",
-    "success": "\x1b[0;30;32m",
-    "warning": "\x1b[0;30;33m",
-    "danger": "\x1b[0;30;31m",
-}
 
-DSS_CONFIG_ERROR = (
-    f"{color['warning']}DJANGO-SILLY-STRIPE IS NOT CONFIGURED PROPERLY."
-    "\nCheck the configuration in the admin panel."
-    f"{color['end']}"
+from .conf import SILLY_STRIPE as dss_conf
 
+
+def user_creates_new_customer(user):
+    """If a user does not have a customer, creates one.
+    Returns the user."""
+    if hasattr(user, 'customer'):
+        return user
+    stripe.api_key = dss_conf["DSS_SECRET_KEY"]
+    new_customer_data = stripe.Customer.create(
+        email=user.email,
+        name=user.username,
+        metadata={
+            'user_id': user.id,
+        }
     )
-
-
-def user_creates_new_customer(user, data):
     new_customer = Customer(
-        id=data["id"],
+        id=new_customer_data.id,
         user=user,
     )
     new_customer.save()
@@ -30,7 +31,10 @@ def user_creates_new_customer(user, data):
 
 
 def get_user_subscriptions(user):
-    subscriptions = user.customer.subscriptions.filter(
-        Q(status="active") | Q(status="trialing")
-    )
+    try:
+        subscriptions = user.customer.subscriptions.filter(
+            Q(status="active") | Q(status="trialing")
+        )
+    except AttributeError:
+        subscriptions = None
     return subscriptions

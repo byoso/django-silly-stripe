@@ -46,6 +46,9 @@ setup(
     ],
     packages=[
         "django_silly_stripe",
+        "django_silly_stripe.migrations",
+        "django_silly_stripe.templates",
+        "django_silly_stripe.templates.admin",
         ],
     # include_package_data=True,
     package_data={'': ['*.txt', '*.html', '*.po', '*.mo', '*.pot']},

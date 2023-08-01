@@ -25,6 +25,7 @@ DSS_CONFIG_ERROR = (
 
 SILLY_STRIPE = {
     # Basic settings
+    'AUTO_SET': 'CLASSIC',  # 'SPA' or 'CLASSIC'
     'DSS_SECRET_KEY': 'sk_xxxxxx',
     'DSS_PUBLIC_KEY': 'pk_xxxxxx',
     'DSS_RESTRICTED_KEY': 'rk_xxxxxx',  # optionnal

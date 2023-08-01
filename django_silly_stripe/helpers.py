@@ -38,3 +38,11 @@ def get_user_subscriptions(user):
     except AttributeError:
         subscriptions = None
     return subscriptions
+
+
+def get_subscription_user(subscription):
+    try:
+        user = subscription.customer.user
+    except AttributeError:
+        user = None
+    return user

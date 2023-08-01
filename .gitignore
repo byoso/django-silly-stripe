@@ -11,6 +11,7 @@ __pycache__/
 
 # packaging
 .eggs/
+.egg-info/
 build/
 dist/
 django_silly_auth.egg-info/

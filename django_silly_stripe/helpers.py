@@ -8,6 +8,12 @@ from django.db.models import QuerySet
 from .conf import SILLY_STRIPE as dss_conf
 
 
+def dev_log(*args, **kwargs):
+    """Prints a message if PRINT_DEV_LOGS is True."""
+    if dss_conf["PRINT_DEV_LOGS"]:
+        print(args, kwargs)
+
+
 def user_creates_new_customer(user):
     """If a user does not have a customer, creates one.
     Returns the user."""
@@ -31,6 +37,7 @@ def user_creates_new_customer(user):
 
 
 def get_user_subscriptions(user):
+    """Returns a QuerySet of all the valid subscriptions of a user or None"""
     try:
         subscriptions = user.customer.subscriptions.filter(
             Q(status="active") | Q(status="trialing")
@@ -41,6 +48,7 @@ def get_user_subscriptions(user):
 
 
 def get_subscription_user(subscription):
+    """Returns the user of a subscription or None."""
     try:
         user = subscription.customer.user
     except AttributeError:

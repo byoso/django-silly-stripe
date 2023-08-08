@@ -14,4 +14,4 @@ __pycache__/
 .egg-info/
 build/
 dist/
-django_silly_auth.egg-info/
+django_silly_stripe.egg-info/

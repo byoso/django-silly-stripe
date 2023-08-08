@@ -44,6 +44,8 @@ SILLY_STRIPE = {
     'SUBSCRIBE_ONLY_ONCE': True,
     # Portal settings
     'PORTAL_BACK_URL': 'https://example.com/back_from_portal',
+    # Misc
+    'PRINT_DEV_LOGS': False,
 }
 
 for key in settings.SILLY_STRIPE:

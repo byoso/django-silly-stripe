@@ -11,7 +11,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 
 from django_silly_stripe.conf import SILLY_STRIPE as dss_conf
-from django_silly_stripe.helpers import user_creates_new_customer
+from django_silly_stripe.helpers import dev_log
 from django_silly_stripe.models import (
     Product,
     Price,
@@ -31,14 +31,14 @@ def webhook(request):
     if request.method != 'POST':
         return JsonResponse({"message": "Method not allowed"}, status=405)
     stripe_payload = request.body
-    # print("===WEBHOOK: stripe_payload: ")
-    # print(stripe_payload)
+    dev_log("===WEBHOOK: stripe_payload: ")
+    dev_log(stripe_payload)
 
     try:
         event = stripe.Event.construct_from(
-        json.loads(stripe_payload), stripe.api_key
+            json.loads(stripe_payload), stripe.api_key
         )
-        # print("=== event type: ", event.type)
+        dev_log("=== event type: ", event.type)
     except ValueError:
         # Invalid payload
         return JsonResponse({"message": "Invalid payload"}, status=400)
@@ -47,7 +47,7 @@ def webhook(request):
     match event.type:
         case "customer.subscription.updated":
             sub_id = event.data.object.id
-            # print(event)
+            dev_log(event)
             if not Subscription.objects.filter(id=sub_id).exists():
                 sub = Subscription(
                     id=sub_id,
@@ -74,7 +74,7 @@ def webhook(request):
                 sub.delete()
 
         case _:
-            # print('Unhandled event type {}'.format(event.type))
+            dev_log('Unhandled event type {}'.format(event.type))
             pass
 
     return JsonResponse({"message": "event handeled"}, status=200)

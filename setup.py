@@ -33,7 +33,7 @@ setup(
         ),
     long_description=README,
     long_description_content_type="text/markdown",
-    url="https://github.com/byoso/django_silly_stripe",
+    url="https://github.com/byoso/django-silly-stripe",
     author="Vincent Fabre",
     author_email="peigne.plume@gmail.com",
     license="MIT",
@@ -53,9 +53,7 @@ setup(
     # include_package_data=True,
     package_data={'': ['*.txt', '*.html', '*.po', '*.mo', '*.pot']},
     python_requires='>=3.7',
-    install_requires=[
-        "stripe>=5.4.0",
-    ],
+    # install_requires=[],
     keywords='django stripe',
     # entry_points={
     #     "console_scripts": [
